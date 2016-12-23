@@ -60,6 +60,20 @@ bool ring_queue_try_get(RingQueue* q,QueueItem* i)
     return true;
 }
 
+bool ring_queue_timed_get(RingQueue* q,QueueItem* i,int sec)
+{
+    if(q==NULL) return false;
+    time_t t=time(NULL);
+    struct timespec ts={t+sec,0};
+    if(sem_timedwait(&q->item_cnt,&ts)!=0) return false;
+    if(sem_wait(&q->get_lock)!=0) return false;
+    *i=q->rbuff[q->head];
+    q->head=(q->head+1)%q->size;
+    sem_post(&q->get_lock);
+    sem_post(&q->free_cnt);
+    return true;
+}
+
 bool ring_queue_put(RingQueue* q,QueueItem i)
 {
     if(q==NULL) return false;
@@ -76,6 +90,20 @@ bool ring_queue_try_put(RingQueue* q,QueueItem i)
 {
     if(q==NULL) return false;
     if(sem_trywait(&q->free_cnt)!=0) return false;
+    if(sem_wait(&q->put_lock)!=0) return false;
+    q->rbuff[q->tail]=i;
+    q->tail=(q->tail+1)%q->size;
+    sem_post(&q->put_lock);
+    sem_post(&q->item_cnt);
+    return true;
+}
+
+bool ring_queue_timed_put(RingQueue* q,QueueItem i,int sec)
+{
+    if(q==NULL) return false;
+    time_t t=time(NULL);
+    struct timespec ts={t+sec,0};
+    if(sem_timedwait(&q->free_cnt,&ts)!=0) return false;
     if(sem_wait(&q->put_lock)!=0) return false;
     q->rbuff[q->tail]=i;
     q->tail=(q->tail+1)%q->size;
