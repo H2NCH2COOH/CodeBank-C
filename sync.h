@@ -1,8 +1,8 @@
 #ifndef _SYNC_H_
 #define _SYNC_H_
 
+#include <stddef.h>
 #include <pthread.h>
-#include <string.h>
 #include <errno.h>
 
 #ifndef fatal
