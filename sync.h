@@ -47,8 +47,15 @@
         } \
         &(obj)->_sync_mutex; \
     })
-static inline void _sync_auto_release(pthread_mutex_t** mp) {pthread_mutex_unlock(*mp);}
 
-#define sync(obj) pthread_mutex_t* _sync_mutex ## __LINE__ __attribute__ ((__cleanup__(_sync_auto_release))) = _sync_auto_acquire(obj)
+static inline void _sync_auto_release(pthread_mutex_t** mp)
+{
+    if (*mp != NULL)
+    {
+        pthread_mutex_unlock(*mp);
+    }
+}
+
+#define sync(obj) pthread_mutex_t* _sync_mutex ## __LINE__ __attribute__ ((__cleanup__(_sync_auto_release))) = ((obj) == NULL)? NULL : _sync_auto_acquire((obj))
 
 #endif /* _SYNC_H_ */
