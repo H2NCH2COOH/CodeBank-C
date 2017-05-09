@@ -56,6 +56,10 @@ static inline void _sync_auto_release(pthread_mutex_t** mp)
     }
 }
 
-#define sync(obj) pthread_mutex_t* _sync_mutex ## __LINE__ __attribute__ ((__cleanup__(_sync_auto_release))) = ((obj) == NULL)? NULL : _sync_auto_acquire((obj))
+
+#define _TOKENPASTE(x, y) x ## y
+#define TOKENPASTE(x, y) _TOKENPASTE(x, y)
+
+#define sync(obj) pthread_mutex_t* TOKENPASTE(__sync_mutex_, __COUNTER__) __attribute__ ((__cleanup__(_sync_auto_release))) = ((obj) == NULL)? NULL : _sync_auto_acquire((obj))
 
 #endif /* _SYNC_H_ */
